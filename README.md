@@ -1,124 +1,55 @@
-# AI Writing Copilot
+# Writing & Mail AI
 
-Full-stack **AI writing assistant** for rewriting text, adjusting tone, fixing grammar, and drafting emails.
+API for rewriting text, changing tone, drafting short emails, and expanding/shortening copy. Keeps a history of runs per user.
 
-Built for mid-level full-stack interviews. Shows practical LLM integration, auth, document history, and a clean API design.
+**FastAPI · Postgres · OpenAI**
 
----
-
-## Features
-
-- [x] User authentication (JWT)
-- [x] Rewrite text (improve clarity, fix grammar)
-- [x] Tone adjustment (professional, casual, friendly, formal, concise)
-- [x] Email draft generation from bullet points / intent
-- [x] Expand or shorten text
-- [x] Writing session history (save prompts + outputs)
-- [x] Docker Compose + Postgres
-- [x] FastAPI backend with dedicated AI service layer
-- [ ] Next.js frontend UI (scaffold ready)
-- [ ] Streaming responses (easy extension)
+(Frontend is only a light Next.js scaffold for now.)
 
 ---
 
-## Tech Stack
+## Endpoints
 
-| Layer    | Technology                         |
-|----------|------------------------------------|
-| Backend  | FastAPI + Python 3.11+             |
-| AI       | OpenAI API (chat models)           |
-| Database | PostgreSQL + SQLAlchemy            |
-| Auth     | JWT                                |
-| Frontend | Next.js 15 + TypeScript (scaffold) |
-| Infra    | Docker Compose                     |
-
----
-
-## Architecture
-
-```
-User → Next.js Frontend
-         ↓
-      FastAPI Backend
-         ├── Auth (JWT)
-         ├── Writing sessions (history)
-         └── AI service (rewrite, tone, email, expand/shorten)
-         ↓
-      PostgreSQL + OpenAI
-```
+| Method | Path | What it does |
+|--------|------|----------------|
+| POST | `/api/v1/auth/register` | Register |
+| POST | `/api/v1/auth/login` | Login |
+| GET | `/api/v1/auth/me` | Current user |
+| POST | `/api/v1/write/rewrite` | Clean up / improve text |
+| POST | `/api/v1/write/tone` | Rewrite in a given tone |
+| POST | `/api/v1/write/email` | Draft an email from notes |
+| POST | `/api/v1/write/transform` | Expand or shorten |
+| GET | `/api/v1/sessions/` | Recent history |
+| DELETE | `/api/v1/sessions/{id}` | Delete one entry |
 
 ---
 
-## API Overview
-
-| Method | Endpoint                         | Description                          |
-|--------|----------------------------------|--------------------------------------|
-| POST   | `/api/v1/auth/register`          | Register                             |
-| POST   | `/api/v1/auth/login`             | Login                                |
-| GET    | `/api/v1/auth/me`                | Current user                         |
-| POST   | `/api/v1/write/rewrite`          | Improve / fix grammar                |
-| POST   | `/api/v1/write/tone`             | Change tone                          |
-| POST   | `/api/v1/write/email`            | Draft an email                       |
-| POST   | `/api/v1/write/transform`        | Expand or shorten text               |
-| GET    | `/api/v1/sessions/`              | List writing history                 |
-| GET    | `/api/v1/sessions/{id}`          | Get one session                      |
-| DELETE | `/api/v1/sessions/{id}`          | Delete a session                     |
-
----
-
-## Getting Started
+## Run
 
 ```bash
-git clone https://github.com/Invenitur42/ai-writing-copilot.git
-cd ai-writing-copilot
-docker-compose up -d
+git clone https://github.com/Invenitur42/Writing_n_Mail_ai.git
+cd Writing_n_Mail_ai
+docker compose up -d
 
 cd backend
-cp .env.example .env   # set OPENAI_API_KEY + SECRET_KEY
+cp .env.example .env   # OPENAI_API_KEY, SECRET_KEY
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python -m app.db.init_db
 uvicorn app.main:app --reload --port 8000
 ```
 
-Interactive docs: http://localhost:8000/docs
+Docs: http://localhost:8000/docs
 
----
+Example:
 
-## Example requests
-
-**Rewrite**
-```json
-POST /api/v1/write/rewrite
-{ "text": "i think we should maybe meet next week if ur free" }
-```
-
-**Tone**
 ```json
 POST /api/v1/write/tone
 { "text": "Can you send the report today?", "tone": "professional" }
 ```
 
-**Email**
-```json
-POST /api/v1/write/email
-{
-  "intent": "Follow up on interview, restate interest in backend role",
-  "recipient": "hiring manager",
-  "tone": "professional"
-}
-```
-
 ---
 
-## Interview Talking Points
+## Implementation notes
 
-- Prompt design per writing mode (rewrite vs tone vs email)
-- Saving user history without storing unnecessary PII
-- Separating AI service from HTTP layer for testability
-- Cost and latency trade-offs of LLM calls in a product API
-- How you would add streaming and rate limiting next
-
----
-
-Part of the [AI Tools Portfolio](https://github.com/Invenitur42/ai-tools-portfolio).
+Writing modes live in `app/services/writer.py` so the routes stay thin. Each call is stored as a session row if you want to look back later. Streaming and rate limits would be the obvious next pieces.
